@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test("synthetic user completes full checkout journey", async ({ page }) => {
   // 1. Visit product detail page
   await page.goto("/product/prod-01");
-  await expect(page.getByText("Wireless Noise-Canceling Headphones")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Aceso Wireless Noise-Canceling Headphones" })).toBeVisible();
 
   // 2. Add product to cart
   await page.getByRole("button", { name: /Add to Cart/i }).click();
@@ -29,6 +29,6 @@ test("synthetic user completes full checkout journey", async ({ page }) => {
 
   // 6. Verify confirmation page (HC-1.1 proof)
   await expect(page).toHaveURL(/.*order-success/);
-  await expect(page.getByText(/Order Confirmed!/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Order Confirmed!/i })).toBeVisible();
   await expect(page.getByText(/checkout_completed/i)).toBeVisible();
 });
