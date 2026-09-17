@@ -3,6 +3,8 @@
  * Handles PostHog event dispatching with automatic synthetic traffic tagging.
  */
 
+import posthog from "posthog-js";
+
 declare global {
   interface Window {
     __ACESO_SYNTHETIC__?: boolean;
@@ -38,17 +40,17 @@ export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}
     timestamp: new Date().toISOString(),
   };
 
-  // If running in browser and posthog is attached
   if (typeof window !== "undefined") {
-    // Log to console in development
     if (process.env.NODE_ENV !== "production") {
       console.log(`[Telemetry][${syntheticFlag ? "SYNTHETIC" : "USER"}] ${event}`, payload);
     }
 
-    // Call PostHog JS if available
-    const win = window as unknown as { posthog?: { capture: (name: string, data: unknown) => void } };
-    if (win.posthog && typeof win.posthog.capture === "function") {
-      win.posthog.capture(event, payload);
+    try {
+      if (posthog && typeof posthog.capture === "function") {
+        posthog.capture(event, payload);
+      }
+    } catch (err) {
+      console.warn("[Telemetry] Failed to capture event in PostHog:", err);
     }
   }
 }
