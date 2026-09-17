@@ -1,0 +1,52 @@
+product: aceso-target-shop
+repo: github.com/ACESO-Intelligent-Recovery/aceso-target-shop
+protectedBranches:
+  - main
+commands:
+  install: pnpm install --frozen-lockfile
+  typecheck: pnpm tsc --noEmit
+  lint: pnpm eslint .
+  unit: pnpm test
+  e2e: pnpm playwright test
+telemetry:
+  posthog:
+    projectId: "aceso-target-shop"
+    funnels:
+      checkout: "checkout_completed"
+      search: "search_performed"
+  sentry:
+    org: "aceso-recovery"
+    project: "aceso-target-shop"
+routes:
+  - path: "/checkout"
+    feature: "checkout"
+    criticality: high
+    flagKey: "aceso-canary-checkout"
+  - path: "/search"
+    feature: "search"
+    criticality: medium
+    flagKey: "aceso-canary-search"
+  - path: "/login"
+    feature: "auth"
+    criticality: high
+    patchPolicy: "human-only"
+patchPolicy:
+  allow:
+    - "app/**"
+    - "components/**"
+    - "lib/**"
+    - "hooks/**"
+  deny:
+    - "app/api/auth/**"
+    - "lib/auth/**"
+    - "lib/payments/**"
+    - "middleware.ts"
+    - "drizzle/**"
+    - "**/*.test.*"
+    - "**/*.spec.*"
+    - "tests/**"
+    - ".env*"
+    - "package-lock.json"
+    - "pnpm-lock.yaml"
+  maxFiles: 3
+  maxChangedLines: 80
