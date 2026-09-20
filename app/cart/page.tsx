@@ -10,7 +10,7 @@ export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, subtotal, totalCount } = useCart();
   const router = useRouter();
 
-  const shipping = subtotal > 0 ? 0 : 0;
+  const shipping = subtotal > 50 ? 0 : 10;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -130,7 +130,9 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Estimated Shipping</span>
-              <span className="text-emerald-600 font-semibold">Free</span>
+              <span className="text-emerald-600 font-semibold">
+                {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+              </span>
             </div>
             <div className="flex justify-between text-neutral-600">
               <span>Estimated Tax (8%)</span>
