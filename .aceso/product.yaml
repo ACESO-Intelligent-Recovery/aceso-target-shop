@@ -6,6 +6,7 @@ commands:
   install: pnpm install --frozen-lockfile
   typecheck: pnpm tsc --noEmit
   lint: pnpm eslint .
+  unit: pnpm test
   e2e: pnpm test:e2e
 telemetry:
   posthog:
