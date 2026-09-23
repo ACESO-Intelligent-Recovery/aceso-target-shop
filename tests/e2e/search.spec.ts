@@ -23,4 +23,10 @@ test("synthetic user searches for products and filters category", async ({ page 
   // Verify filtered results
   await expect(page.locator("h1")).toContainText(/headphones/i);
   await expect(page.getByText("Wireless Noise-Canceling Headphones")).toBeVisible();
+
+  // Search for regex special characters (RE-02 defense: unescaped regex must not crash page)
+  await searchInput.fill("[test");
+  await searchInput.press("Enter");
+  await expect(page.locator("h1")).toContainText(/\[test/);
+  await expect(page.getByText("No matching products found")).toBeVisible();
 });
