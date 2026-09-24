@@ -11,22 +11,24 @@ test("synthetic user searches for products and filters category", async ({ page 
   await page.goto("/search");
   await expect(page).toHaveTitle(/Aceso Target Shop/);
 
+  const main = page.locator("main");
+
   // Verify catalogue loads products
-  const productCards = page.locator("a[href^='/product/']");
+  const productCards = main.locator("a[href^='/product/']");
   await expect(productCards.first()).toBeVisible();
 
   // Search for "headphones"
-  const searchInput = page.locator("input[placeholder*='Filter by keyword']");
+  const searchInput = main.locator("input[placeholder*='Filter by keyword']");
   await searchInput.fill("headphones");
   await searchInput.press("Enter");
 
   // Verify filtered results
-  await expect(page.locator("h1")).toContainText(/headphones/i);
-  await expect(page.getByText("Wireless Noise-Canceling Headphones")).toBeVisible();
+  await expect(main.locator("h1")).toContainText(/headphones/i);
+  await expect(main.getByText("Wireless Noise-Canceling Headphones")).toBeVisible();
 
   // Search for regex special characters (RE-02 defense: unescaped regex must not crash page)
   await searchInput.fill("[test");
   await searchInput.press("Enter");
-  await expect(page.locator("h1")).toContainText(/\[test/);
-  await expect(page.getByText("No matching products found")).toBeVisible();
+  await expect(main.locator("h1")).toContainText(/\[test/);
+  await expect(main.getByText("No matching products found")).toBeVisible();
 });
