@@ -3,13 +3,43 @@ import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     window.__ACESO_SYNTHETIC__ = true;
+    window.__ACESO_EVENTS__ = [];
   });
 });
 
 test("synthetic user completes full checkout journey", async ({ page }) => {
+  // Capture unhandled page errors (e.g. React hydration / useEffect crashes)
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (err) => pageErrors.push(err));
+
   // 1. Visit product detail page
   await page.goto("/product/prod-01");
   await expect(page.getByRole("heading", { name: "Aceso Wireless Noise-Canceling Headphones" })).toBeVisible();
+  // Behavioral verification: assert category tag is rendered on the page
+  await expect(page.locator("span", { hasText: "electronics" }).first()).toBeVisible();
+
+  // Telemetry verification: assert product_viewed event was dispatched with category: "electronics" without crashing
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(() => {
+          const events = window.__ACESO_EVENTS__ || [];
+          return events.some(
+            (e: { event?: string; category?: string; productId?: string }) =>
+              e.event === "product_viewed" &&
+              e.category === "electronics" &&
+              e.productId === "prod-01"
+          );
+        });
+      },
+      {
+        message: "product_viewed telemetry event not dispatched with valid category",
+        timeout: 5000,
+      }
+    )
+    .toBe(true);
+
+  expect(pageErrors).toHaveLength(0);
 
   // 2. Add product to cart
   await page.getByRole("button", { name: /Add to Cart/i }).click();

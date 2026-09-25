@@ -8,6 +8,7 @@ import posthog from "posthog-js";
 declare global {
   interface Window {
     __ACESO_SYNTHETIC__?: boolean;
+    __ACESO_EVENTS__?: Array<{ event: string; [key: string]: unknown }>;
   }
 }
 
@@ -41,6 +42,9 @@ export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}
   };
 
   if (typeof window !== "undefined") {
+    if (Array.isArray(window.__ACESO_EVENTS__)) {
+      window.__ACESO_EVENTS__.push({ event, ...payload });
+    }
     if (process.env.NODE_ENV !== "production") {
       console.log(`[Telemetry][${syntheticFlag ? "SYNTHETIC" : "USER"}] ${event}`, payload);
     }
