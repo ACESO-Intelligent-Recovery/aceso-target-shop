@@ -59,6 +59,27 @@ test("synthetic user completes full checkout journey", async ({ page }) => {
   await expect(page.getByText("$16.00")).toBeVisible();
   await expect(page.getByRole("button", { name: /Place Order \(\$215\.99\)/i })).toBeVisible();
 
+  // Telemetry verification: assert checkout_started event was dispatched
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(() => {
+          const events = window.__ACESO_EVENTS__ || [];
+          return events.some(
+            (e: { event?: string; total?: number }) =>
+              e.event === "checkout_started" && Math.abs((e.total || 0) - 215.99) < 0.01
+          );
+        });
+      },
+      {
+        message: "checkout_started telemetry event not dispatched with correct total",
+        timeout: 5000,
+      }
+    )
+    .toBe(true);
+
+  expect(pageErrors).toHaveLength(0);
+
   // 5. Place order
   await page.getByRole("button", { name: /Place Order/i }).click();
 
@@ -67,4 +88,7 @@ test("synthetic user completes full checkout journey", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /Order Confirmed!/i })).toBeVisible();
   await expect(page.getByText("$215.99")).toBeVisible();
   await expect(page.getByText(/checkout_completed/i)).toBeVisible();
+
+  // Final sanity check: no uncaught page errors across the entire journey
+  expect(pageErrors).toHaveLength(0);
 });
