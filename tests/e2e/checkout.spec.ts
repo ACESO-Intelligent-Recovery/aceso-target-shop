@@ -52,6 +52,14 @@ test("synthetic user completes full checkout journey", async ({ page }) => {
   // Monetary verification: verify ground-truth total ($215.99 = $199.99 subtotal + $0 shipping + $16.00 tax)
   await expect(page.getByText("$215.99")).toBeVisible();
 
+  // Exercise cart quantity adjustment (increment to 2, then decrement back to 1)
+  await page.getByRole("button", { name: "+", exact: true }).click();
+  await expect(page.getByText("$399.98").first()).toBeVisible();
+  await page.getByRole("button", { name: "-", exact: true }).click();
+  await expect(page.getByText("$199.99").first()).toBeVisible();
+  await expect(page.getByText("$215.99")).toBeVisible();
+  expect(pageErrors).toHaveLength(0);
+
   // 4. Proceed to checkout
   await page.getByRole("button", { name: /Proceed to Checkout/i }).click();
   await expect(page).toHaveURL(/.*checkout/);
