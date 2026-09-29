@@ -78,7 +78,7 @@ export default function CartPage() {
                 <div className="flex items-center gap-3 mt-3">
                   <div className="flex items-center border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
                     <button
-                      onClick={() => updateQuantity(product.id, quantity - 1)}
+                      onClick={() => (updateQuantity as any).invoke(product.id, quantity - 1)}
                       className="px-2.5 py-1 text-xs font-bold text-neutral-600 hover:bg-neutral-200 transition"
                     >
                       -
