@@ -9,6 +9,7 @@ declare global {
   interface Window {
     __ACESO_SYNTHETIC__?: boolean;
     __ACESO_EVENTS__?: Array<{ event: string; [key: string]: unknown }>;
+    posthog?: any;
   }
 }
 
@@ -42,16 +43,19 @@ export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}
   };
 
   if (typeof window !== "undefined") {
-    if (Array.isArray(window.__ACESO_EVENTS__)) {
-      window.__ACESO_EVENTS__.push({ event, ...payload });
+    if (!window.posthog && posthog) {
+      (window as any).posthog = posthog;
     }
+    window.__ACESO_EVENTS__ = window.__ACESO_EVENTS__ || [];
+    window.__ACESO_EVENTS__.push({ event, ...payload });
+
     if (process.env.NODE_ENV !== "production") {
       console.log(`[Telemetry][${syntheticFlag ? "SYNTHETIC" : "USER"}] ${event}`, payload);
     }
 
     try {
       if (posthog && typeof posthog.capture === "function") {
-        posthog.capture(event, payload);
+        posthog.capture(event, payload, { send_instantly: true });
       }
     } catch (err) {
       console.warn("[Telemetry] Failed to capture event in PostHog:", err);
