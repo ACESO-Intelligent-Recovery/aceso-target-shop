@@ -8,8 +8,8 @@ export async function GET() {
   let flushStatus = "success";
   try {
     await Sentry.flush(2000);
-  } catch (e: any) {
-    flushStatus = "failed: " + e.message;
+  } catch (e: unknown) {
+    flushStatus = "failed: " + (e instanceof Error ? e.message : String(e));
   }
 
   return NextResponse.json(
@@ -19,7 +19,9 @@ export async function GET() {
       message: error.message,
       flushStatus,
       dsn_present: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
-      release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_GIT_COMMIT_SHA || "local-dev",
+      release: process.env.NEXT_PUBLIC_ACESO_RELEASE_ID || process.env.VERCEL_GIT_COMMIT_SHA || "local-dev",
+      deploymentId: process.env.NEXT_PUBLIC_ACESO_DEPLOYMENT_ID || process.env.VERCEL_DEPLOYMENT_ID || "local-dev",
+      environment: process.env.NEXT_PUBLIC_ACESO_ENVIRONMENT || process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
     },
     { status: 200 }
   );

@@ -9,7 +9,13 @@ declare global {
   interface Window {
     __ACESO_SYNTHETIC__?: boolean;
     __ACESO_EVENTS__?: Array<{ event: string; [key: string]: unknown }>;
-    posthog?: any;
+    posthog?: typeof posthog;
+    __ACESO_PREVIEW_CONTEXT__?: { runId?: string };
+    __ACESO_BUILD_CONTEXT__?: {
+      deploymentId: string;
+      release: string;
+      environment: string;
+    };
   }
 }
 
@@ -24,6 +30,15 @@ export interface TelemetryPayload {
   [key: string]: unknown;
 }
 
+if (typeof window !== "undefined") {
+  window.__ACESO_BUILD_CONTEXT__ = {
+    deploymentId: process.env.NEXT_PUBLIC_ACESO_DEPLOYMENT_ID || "local-dev",
+    release: process.env.NEXT_PUBLIC_ACESO_RELEASE_ID || "local-dev",
+    environment:
+      process.env.NEXT_PUBLIC_ACESO_ENVIRONMENT || process.env.NODE_ENV || "development",
+  };
+}
+
 export function isSynthetic(): boolean {
   if (typeof window !== "undefined") {
     return Boolean(window.__ACESO_SYNTHETIC__);
@@ -36,15 +51,29 @@ export function isSynthetic(): boolean {
  */
 export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}): void {
   const syntheticFlag = isSynthetic() || Boolean(properties.synthetic);
+  const buildContext = {
+    deploymentId: process.env.NEXT_PUBLIC_ACESO_DEPLOYMENT_ID || "local-dev",
+    release: process.env.NEXT_PUBLIC_ACESO_RELEASE_ID || "local-dev",
+    environment:
+      process.env.NEXT_PUBLIC_ACESO_ENVIRONMENT || process.env.NODE_ENV || "development",
+  };
+  const runId = typeof window !== "undefined" ? window.__ACESO_PREVIEW_CONTEXT__?.runId : undefined;
   const payload = {
     ...properties,
     synthetic: syntheticFlag,
     timestamp: new Date().toISOString(),
+    ...(buildContext.deploymentId !== "local-dev" && {
+      aceso_deployment_id: buildContext.deploymentId,
+      aceso_release: buildContext.release,
+      aceso_environment: buildContext.environment,
+    }),
+    ...(runId && { aceso_preview_run_id: runId }),
   };
 
   if (typeof window !== "undefined") {
+    window.__ACESO_BUILD_CONTEXT__ = buildContext;
     if (!window.posthog && posthog) {
-      (window as any).posthog = posthog;
+      window.posthog = posthog;
     }
     window.__ACESO_EVENTS__ = window.__ACESO_EVENTS__ || [];
     window.__ACESO_EVENTS__.push({ event, ...payload });

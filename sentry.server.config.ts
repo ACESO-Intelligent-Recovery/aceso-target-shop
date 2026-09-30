@@ -4,6 +4,11 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 0.1,
   debug: false,
-  release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || "local-dev",
-  environment: process.env.NODE_ENV || "development",
+  release: process.env.NEXT_PUBLIC_ACESO_RELEASE_ID || "local-dev",
+  environment: process.env.NEXT_PUBLIC_ACESO_ENVIRONMENT || process.env.NODE_ENV || "development",
+  initialScope: {
+    tags: {
+      aceso_deployment_id: process.env.NEXT_PUBLIC_ACESO_DEPLOYMENT_ID || "local-dev",
+    },
+  },
 });
