@@ -7,7 +7,8 @@ export async function GET() {
   
   let flushStatus = "success";
   try {
-    await Sentry.flush(2000);
+    const flushed = await Sentry.flush(2000);
+    flushStatus = flushed ? "success" : "timeout";
   } catch (e: unknown) {
     flushStatus = "failed: " + (e instanceof Error ? e.message : String(e));
   }
