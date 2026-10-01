@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("synthetic user signs in with pre-configured account", async ({ page }) => {
+test("synthetic user signs in with pre-configured account @auth", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByText(/Synthetic Sign In/i)).toBeVisible();
 

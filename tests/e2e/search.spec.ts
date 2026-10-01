@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("synthetic user searches for products and filters category", async ({ page }) => {
+test("synthetic user searches for products and filters category @search", async ({ page }) => {
   await page.goto("/search");
   await expect(page).toHaveTitle(/Aceso Target Shop/);
 
