@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("synthetic user completes full checkout journey", async ({ page }) => {
+test("synthetic user completes full checkout journey @checkout", async ({ page }) => {
   // Capture unhandled page errors (e.g. React hydration / useEffect crashes)
   const pageErrors: Error[] = [];
   page.on("pageerror", (err) => pageErrors.push(err));
