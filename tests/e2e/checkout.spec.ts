@@ -100,3 +100,21 @@ test("synthetic user completes full checkout journey @checkout", async ({ page }
   // Final sanity check: no uncaught page errors across the entire journey
   expect(pageErrors).toHaveLength(0);
 });
+
+test("cart under $50 keeps free shipping @checkout", async ({ page }) => {
+  // The main journey uses a $199.99 cart, so any shipping rule that is free
+  // above $50 passes it. This cart is below every threshold a regression could
+  // pick: $28.00 subtotal + $0 shipping + $2.24 tax (8%) = $30.24.
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (err) => pageErrors.push(err));
+
+  await page.goto("/product/prod-10");
+  await page.getByRole("button", { name: /Add to Cart/i }).click();
+  await expect(page.getByText(/Added \d+ ×/)).toBeVisible();
+
+  await page.goto("/cart");
+  await expect(page.getByText("Merino Wool Everyday Crew Socks (3-Pack)")).toBeVisible();
+  await expect(page.getByText("$2.24")).toBeVisible();
+  await expect(page.getByText("$30.24")).toBeVisible();
+  expect(pageErrors).toHaveLength(0);
+});
