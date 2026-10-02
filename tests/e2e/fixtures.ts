@@ -23,29 +23,43 @@ export const test = base.extend({
       ) {
         throw new Error("Browser build identity does not match the preview under test.");
       }
-      const telemetryResponse = page.waitForResponse(
-        (response) => new URL(response.url()).pathname.endsWith("/e/"),
-        { timeout: 10000 }
-      );
-      await page.evaluate((journeyRunId) => {
-        const posthogClient = window.posthog;
-        if (!posthogClient || typeof posthogClient.capture !== "function") {
-          throw new Error("PostHog is not initialized; cannot emit preview completion evidence.");
-        }
-        posthogClient.capture(
-          "aceso_preview_journey_completed",
-          {
-            ...window.__ACESO_BUILD_CONTEXT__,
-            aceso_deployment_id: window.__ACESO_BUILD_CONTEXT__?.deploymentId,
-            aceso_release: window.__ACESO_BUILD_CONTEXT__?.release,
-            aceso_environment: window.__ACESO_BUILD_CONTEXT__?.environment,
-            aceso_preview_run_id: journeyRunId,
-            synthetic: true,
+      // The event is sent from the test runner, not the page. Sent from the
+      // page, the fixture waited for *any* PostHog response and the browser
+      // could close before this event left it: 1 in 10 completion events
+      // (4 in 10 on longer journeys) never reached PostHog. The build identity
+      // above is still read from, and checked in, the browser.
+      const posthogClient = await page.evaluate(() => {
+        const client = window.posthog;
+        if (!client || typeof client.get_distinct_id !== "function") return null;
+        return {
+          token: client.config?.token as string | undefined,
+          apiHost: client.config?.api_host as string | undefined,
+          distinctId: client.get_distinct_id(),
+        };
+      });
+      if (!posthogClient?.token || !posthogClient.apiHost) {
+        throw new Error("PostHog is not initialized; cannot emit preview completion evidence.");
+      }
+      const response = await page.request.post(
+        `${posthogClient.apiHost.replace(/\/$/, "")}/i/v0/e/`,
+        {
+          data: {
+            api_key: posthogClient.token,
+            event: "aceso_preview_journey_completed",
+            distinct_id: posthogClient.distinctId,
+            timestamp: new Date().toISOString(),
+            properties: {
+              ...context,
+              aceso_deployment_id: context.deploymentId,
+              aceso_release: context.release,
+              aceso_environment: context.environment,
+              aceso_preview_run_id: runId,
+              synthetic: true,
+            },
           },
-          { send_instantly: true }
-        );
-      }, runId);
-      const response = await telemetryResponse;
+          timeout: 15000,
+        }
+      );
       if (!response.ok()) {
         throw new Error(`PostHog rejected the preview completion event (${response.status()}).`);
       }
