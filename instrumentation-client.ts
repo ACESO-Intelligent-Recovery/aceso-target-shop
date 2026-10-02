@@ -26,6 +26,8 @@ const isSyntheticTraffic = Boolean(window.__ACESO_SYNTHETIC__);
 try {
   Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    // Vercel builds only; see next.config.ts.
+    enabled: process.env.NEXT_PUBLIC_ACESO_SENTRY_ENABLED === "1",
     // Free-tier hygiene (5K errors/month).
     tracesSampleRate: 0.1,
     debug: false,
