@@ -214,7 +214,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.9,
     reviewsCount: 220,
     stock: 30,
-    imageUrl: "https://images.unsplash.com/photo-1532012164546-f432f2e3777f?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/Stack_of_multicolored_books_on_a_table.jpg/960px-Stack_of_multicolored_books_on_a_table.jpg",
   },
   {
     id: "prod-18",
@@ -310,7 +310,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.8,
     reviewsCount: 71,
     stock: 25,
-    imageUrl: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Gamelles_en_alu.jpg/960px-Gamelles_en_alu.jpg",
   },
   {
     id: "prod-26",
@@ -334,7 +334,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.7,
     reviewsCount: 204,
     stock: 90,
-    imageUrl: "https://images.unsplash.com/photo-1541689592655-f5f52825a3b8?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/USB-C_cable_2017_A.jpg/960px-USB-C_cable_2017_A.jpg",
   },
   {
     id: "prod-28",
@@ -346,7 +346,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.6,
     reviewsCount: 56,
     stock: 18,
-    imageUrl: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/%28US%29_BAG%2C_DUFFEL_%28501e_RCC_-_2e_DB%29%2C_2001.194.jpg/960px-%28US%29_BAG%2C_DUFFEL_%28501e_RCC_-_2e_DB%29%2C_2001.194.jpg",
   },
   {
     id: "prod-29",
@@ -358,7 +358,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.9,
     reviewsCount: 215,
     stock: 35,
-    imageUrl: "https://images.unsplash.com/photo-1584990347449-399a9b9a66ba?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Victoria_Signature_Series_Skillet%2C_2023.jpg/960px-Victoria_Signature_Series_Skillet%2C_2023.jpg",
   },
   {
     id: "prod-30",
@@ -370,7 +370,7 @@ export const PRODUCTS: Product[] = [
     rating: 4.7,
     reviewsCount: 62,
     stock: 20,
-    imageUrl: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?w=600&q=80",
+    imageUrl: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Mummy_bag.jpg/960px-Mummy_bag.jpg",
   },
 ];
 
