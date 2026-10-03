@@ -7,6 +7,10 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [["html"], ["json", { outputFile: "test-results.json" }], ["list"]],
+  // 15 s (default 5 s): on a cold Vercel preview the first visit to a route
+  // can take longer than 5 s. A real fault never shows the expected element,
+  // so it still fails; only slowness is tolerated (2026-10-03, RE-10 preview).
+  expect: { timeout: 15000 },
   use: {
     baseURL: process.env.TARGET_SHOP_URL || "http://localhost:3000",
     trace: "on-first-retry",
