@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # The job name below is the status check name to require in branch protection.
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        # version is read from the packageManager field in package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      # Non-blocking for now: main has 2 known react-hooks/set-state-in-effect
+      # errors (lib/cart.tsx, app/search/page.tsx). They sit in benchmark files,
+      # which Harsh will fix after the benchmark ends. Remove continue-on-error
+      # then, so lint becomes blocking.
+      - name: Lint
+        run: pnpm lint
+        continue-on-error: true
+
+      - name: Unit tests
+        run: pnpm vitest run
+
+      # PostHog and Sentry env vars are deliberately not set: CI traffic must
+      # not reach the telemetry projects. The tests read window.__ACESO_EVENTS__.
+      - name: Build
+        run: pnpm build
+
+      - name: Start app
+        run: |
+          pnpm start --port 3000 > next-start.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000 > /dev/null; then
+              echo "App is up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "App did not start within 60s"
+          cat next-start.log
+          exit 1
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # playwright.config.ts retries twice when CI is set; pass --retries=0 so a
+      # flaky test fails visibly instead of being hidden by a retry.
+      - name: Playwright E2E
+        env:
+          TARGET_SHOP_URL: http://localhost:3000
+        run: pnpm test:e2e --retries=0
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
