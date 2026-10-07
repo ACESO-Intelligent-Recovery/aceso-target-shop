@@ -47,6 +47,23 @@ export function isSynthetic(): boolean {
 }
 
 /**
+ * Events sent just before the page navigates away. A normal request can be
+ * cancelled by the navigation; a beacon is handed to the browser and survives
+ * it. In the 2026-10 eval runs a browser-sent checkout_completed sometimes
+ * never reached PostHog, so a correct fix was recorded as not proven live.
+ */
+const SENT_BEFORE_NAVIGATION: ReadonlySet<FunnelEvent> = new Set(["checkout_completed"]);
+
+export function captureOptions(event: FunnelEvent): {
+  send_instantly: true;
+  transport?: "sendBeacon";
+} {
+  return SENT_BEFORE_NAVIGATION.has(event)
+    ? { send_instantly: true, transport: "sendBeacon" }
+    : { send_instantly: true };
+}
+
+/**
  * Dispatch an event to PostHog with synthetic tagging.
  */
 export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}): void {
@@ -84,7 +101,7 @@ export function trackEvent(event: FunnelEvent, properties: TelemetryPayload = {}
 
     try {
       if (posthog && typeof posthog.capture === "function") {
-        posthog.capture(event, payload, { send_instantly: true });
+        posthog.capture(event, payload, captureOptions(event));
       }
     } catch (err) {
       console.warn("[Telemetry] Failed to capture event in PostHog:", err);
