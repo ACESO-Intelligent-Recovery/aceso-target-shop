@@ -7,6 +7,21 @@ export const test = base.extend({
       window.__ACESO_PREVIEW_CONTEXT__ = { runId: previewRunId };
     }, runId);
 
+    // The page's "load" event can wait forever on a resource the journey does
+    // not need: on 2026-10-07 page.goto("/login") timed out at 90 s on a preview
+    // whose page had fully rendered. Vercel's preview toolbar (vercel.live) is
+    // not part of the shop, so it is blocked; and goto waits for the HTML, then
+    // up to 15 s for "load" without failing, so hydration still usually
+    // finishes before the first click. The journeys' expects wait for content.
+    await page.route(/^https:\/\/vercel\.live\//, (route) => route.abort());
+    const goto = page.goto.bind(page);
+    page.goto = async (url, options) => {
+      if (options?.waitUntil) return goto(url, options);
+      const response = await goto(url, { ...options, waitUntil: "domcontentloaded" });
+      await page.waitForLoadState("load", { timeout: 15000 }).catch(() => undefined);
+      return response;
+    };
+
     await runFixture(page);
 
     // Send a positive heartbeat only after the browser journey passed. The
