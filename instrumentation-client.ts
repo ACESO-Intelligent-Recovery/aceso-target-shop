@@ -47,7 +47,14 @@ try {
     posthog.init(posthogKey, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
       person_profiles: "identified_only",
-      capture_pageview: true,
+      // Count client-side navigations too (router.push between pages), not only
+      // full page loads: the detector's per-route error rate is exceptions per
+      // page view, and /checkout, /search and / had too few full loads to be
+      // scored in the 2026-10-08 trial (DL-41).
+      capture_pageview: "history_change",
+      // Send browser exceptions to PostHog: the per-route error rate (DL-36)
+      // counts $exception events, and none were sent before this.
+      capture_exceptions: true,
       capture_pageleave: true,
       autocapture: true,
       // Headless synthetic Playwright traffic must not be bot-filtered.
