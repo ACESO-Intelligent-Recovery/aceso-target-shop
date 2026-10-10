@@ -10,6 +10,7 @@ export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, subtotal, totalCount } = useCart();
   const router = useRouter();
 
+  // Business rule: shipping is free on every order.
   const shipping = subtotal > 0 ? 0 : 0;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
