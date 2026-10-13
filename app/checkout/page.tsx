@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, CreditCard, Lock, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { cartItemKey, productSize } from "@/lib/cart-items";
 import { trackEvent } from "@/lib/telemetry";
 
 export default function CheckoutPage() {
@@ -234,11 +235,12 @@ export default function CheckoutPage() {
             <h2 className="text-base font-bold text-neutral-900">Order Summary</h2>
 
             <div className="divide-y divide-neutral-100 max-h-60 overflow-y-auto pr-1">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="py-2.5 flex justify-between items-center text-xs">
+              {items.map(({ product, quantity, size }) => (
+                <div key={cartItemKey(product, size)} className="py-2.5 flex justify-between items-center text-xs">
                   <div className="truncate pr-2">
                     <span className="font-semibold text-neutral-800">{product.name}</span>
                     <span className="text-neutral-400 block">Qty: {quantity}</span>
+                    {productSize(product, size) && <span className="text-neutral-500 block">Size: {productSize(product, size)}</span>}
                   </div>
                   <span className="font-semibold text-neutral-900 flex-shrink-0">
                     ${(product.price * quantity).toFixed(2)}

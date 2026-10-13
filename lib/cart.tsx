@@ -2,15 +2,13 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Product } from "./products";
+import { addCartItem, removeCartItem, setCartQuantity, type CartItem, type ClothingSize } from "./cart-items";
 
-export interface CartItem {
-  product: Product;
-  quantity: number;
-}
+export type { CartItem } from "./cart-items";
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, size?: ClothingSize) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -46,20 +44,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, isLoaded]);
 
-  const addToCart = (product: Product, quantity = 1) => {
-    setItems((prev) => {
-      const existingIndex = prev.findIndex((item) => item.product.id === product.id);
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
-        return updated;
-      }
-      return [...prev, { product, quantity }];
-    });
+  const addToCart = (product: Product, quantity = 1, size?: ClothingSize) => {
+    setItems((prev) => addCartItem(prev, product, quantity, size));
   };
 
   const removeFromCart = (productId: string) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+    setItems((prev) => removeCartItem(prev, productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -67,11 +57,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeFromCart(productId);
       return;
     }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
+    setItems((prev) => setCartQuantity(prev, productId, quantity));
   };
 
   const clearCart = () => {

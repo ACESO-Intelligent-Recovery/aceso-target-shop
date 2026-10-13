@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Star, ShoppingBag, ArrowLeft, Check, Shield, Truck } from "lucide-react";
 import { getProductById } from "@/lib/products";
+import type { Product } from "@/lib/products";
+import { CLOTHING_SIZES, type ClothingSize } from "@/lib/cart-items";
 import { useCart } from "@/lib/cart";
 import { trackEvent } from "@/lib/telemetry";
 
@@ -13,7 +15,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
   const product = getProductById(resolvedParams.id);
 
-  const { addToCart } = useCart();
+  const { addToCart: addCartProduct } = useCart();
+  const [sizeChoice, setSizeChoice] = useState<{ productId: string; size: ClothingSize } | null>(null);
+  const selectedSize = sizeChoice?.productId === resolvedParams.id ? sizeChoice.size : "M";
+  const addToCart = (product: Product, quantity: number) => addCartProduct(product, quantity, selectedSize);
   const [quantity, setQuantity] = useState(1);
   const [addedAlert, setAddedAlert] = useState(false);
 
@@ -137,6 +142,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Purchasing Controls */}
           <div className="space-y-4 pt-4 border-t border-neutral-100">
+            {product.category === "apparel" && (
+              <div className="flex items-center gap-3">
+                <label htmlFor="clothing-size" className="text-xs font-semibold text-neutral-700">Size:</label>
+                <select
+                  id="clothing-size"
+                  value={selectedSize}
+                  onChange={(event) => setSizeChoice({ productId: product.id, size: event.target.value as ClothingSize })}
+                  className="rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  {CLOTHING_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+                </select>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-neutral-700">Quantity:</span>
               <div className="flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-neutral-50">
