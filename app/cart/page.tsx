@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2, ShoppingBag, ArrowRight, ArrowLeft } from "lucide-react";
 import { useCart } from "@/lib/cart";
+import { cartItemKey, productSize } from "@/lib/cart-items";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, clearCart, subtotal, totalCount } = useCart();
+  const { items, updateQuantity: updateItem, removeFromCart: removeItem, clearCart, subtotal, totalCount } = useCart();
   const router = useRouter();
 
   // Business rule: shipping is free on every order.
@@ -54,9 +55,14 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items List */}
         <div className="lg:col-span-2 space-y-4">
-          {items.map(({ product, quantity }) => (
+          {items.map(({ product, quantity, size }) => {
+            const key = cartItemKey(product, size);
+            const updateQuantity = (_productId: string, nextQuantity: number) => updateItem(key, nextQuantity);
+            const removeFromCart: (productId: string) => void = () => removeItem(key);
+            return (
             <div
-              key={product.id}
+              key={key}
+              data-testid="cart-line"
               className="bg-white p-4 rounded-xl border border-neutral-200 flex gap-4 items-center shadow-2xs"
             >
               <div className="w-20 h-20 rounded-lg bg-neutral-100 overflow-hidden flex-shrink-0">
@@ -74,6 +80,7 @@ export default function CartPage() {
                 >
                   {product.name}
                 </Link>
+                {productSize(product, size) && <p className="text-xs text-neutral-500">Size: {productSize(product, size)}</p>}
                 <div className="text-xs text-neutral-500 mt-0.5">${product.price.toFixed(2)} each</div>
 
                 <div className="flex items-center gap-3 mt-3">
@@ -109,7 +116,8 @@ export default function CartPage() {
                 </span>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           <Link
             href="/search"

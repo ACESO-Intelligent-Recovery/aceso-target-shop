@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle, ArrowRight, ShieldCheck, Package } from "lucide-react";
@@ -9,6 +9,18 @@ function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId") || "ORD-000000";
   const total = searchParams.get("total") || "0.00";
+  const deliveryTime = useRef<HTMLTimeElement>(null);
+
+  useEffect(() => {
+    const delivery = new Date();
+    delivery.setDate(delivery.getDate() + 5);
+    if (deliveryTime.current) {
+      deliveryTime.current.textContent = new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit", month: "short", year: "numeric",
+      }).format(delivery);
+      deliveryTime.current.dateTime = `${delivery.getFullYear()}-${String(delivery.getMonth() + 1).padStart(2, "0")}-${String(delivery.getDate()).padStart(2, "0")}`;
+    }
+  }, []);
 
   return (
     <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
@@ -41,6 +53,10 @@ function OrderSuccessContent() {
             <Package className="w-3.5 h-3.5" />
             <span>Processing Dispatch</span>
           </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-neutral-500">Estimated delivery</span>
+          <time ref={deliveryTime} className="font-semibold text-neutral-900" aria-live="polite">—</time>
         </div>
         <div className="flex justify-between">
           <span className="text-neutral-500">Telemetry Proof</span>
