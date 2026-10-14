@@ -2,13 +2,13 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Product } from "./products";
-import { addCartItem, removeCartItem, setCartQuantity, type CartItem, type ClothingSize } from "./cart-items";
+import { addCartItem, normalizeCartItems, removeCartItem, setCartQuantity, type CartItem, type ProductSize } from "./cart-items";
 
 export type { CartItem } from "./cart-items";
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number, size?: ClothingSize) => void;
+  addToCart: (product: Product, quantity?: number, size?: ProductSize) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -26,7 +26,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const saved = localStorage.getItem("aceso_cart");
       if (saved) {
-        setItems(JSON.parse(saved));
+        setItems(normalizeCartItems(JSON.parse(saved)));
       }
     } catch {
       // Ignore storage read errors
@@ -44,7 +44,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, isLoaded]);
 
-  const addToCart = (product: Product, quantity = 1, size?: ClothingSize) => {
+  const addToCart = (product: Product, quantity = 1, size?: ProductSize) => {
     setItems((prev) => addCartItem(prev, product, quantity, size));
   };
 
