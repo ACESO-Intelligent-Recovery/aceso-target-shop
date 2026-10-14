@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Star, ShoppingBag, ArrowLeft, Check, Shield, Truck } from "lucide-react";
 import { getProductById } from "@/lib/products";
 import type { Product } from "@/lib/products";
-import { CLOTHING_SIZES, type ClothingSize } from "@/lib/cart-items";
+import { productSize, productSizes, type ProductSize } from "@/lib/cart-items";
 import { useCart } from "@/lib/cart";
 import { trackEvent } from "@/lib/telemetry";
 
@@ -16,8 +16,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const product = getProductById(resolvedParams.id);
 
   const { addToCart: addCartProduct } = useCart();
-  const [sizeChoice, setSizeChoice] = useState<{ productId: string; size: ClothingSize } | null>(null);
-  const selectedSize = sizeChoice?.productId === resolvedParams.id ? sizeChoice.size : "M";
+  const [sizeChoice, setSizeChoice] = useState<{ productId: string; size: ProductSize } | null>(null);
+  const sizeOptions = product ? productSizes(product) : [];
+  const selectedSize = product ? productSize(product,
+    sizeChoice?.productId === resolvedParams.id ? sizeChoice.size : undefined
+  ) : undefined;
   const addToCart = (product: Product, quantity: number) => addCartProduct(product, quantity, selectedSize);
   const [quantity, setQuantity] = useState(1);
   const [addedAlert, setAddedAlert] = useState(false);
@@ -142,16 +145,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Purchasing Controls */}
           <div className="space-y-4 pt-4 border-t border-neutral-100">
-            {product.category === "apparel" && (
+            {sizeOptions.length > 0 && (
               <div className="flex items-center gap-3">
                 <label htmlFor="clothing-size" className="text-xs font-semibold text-neutral-700">Size:</label>
                 <select
                   id="clothing-size"
                   value={selectedSize}
-                  onChange={(event) => setSizeChoice({ productId: product.id, size: event.target.value as ClothingSize })}
+                  onChange={(event) => setSizeChoice({ productId: product.id, size: event.target.value as ProductSize })}
                   className="rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  {CLOTHING_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+                  {sizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
                 </select>
               </div>
             )}
