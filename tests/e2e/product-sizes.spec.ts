@@ -40,15 +40,29 @@ test("bag page has no selector or cart and checkout size @features", async ({ pa
 });
 
 test("buy now preselects UK 9 and the default shoe retains its product-id key @features", async ({ page }) => {
+  // This journey chains three cold routes, and on a busy preview a click can land before
+  // React hydrates and be lost (it failed in 17 of 52 preview runs of the 2026-10-26
+  // capture, at different steps, on the healthy build too). Each click is retried until
+  // its effect shows, as in auth.spec.ts; a click that never takes effect still fails.
   await page.goto("/product/prod-08");
-  await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed"))).toBe(true);
-  await page.getByRole("button", { name: "Buy Now", exact: true }).click();
-  await expect(page).toHaveURL(/\/checkout$/);
+  await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed")), { timeout: 30000 }).toBe(true);
+  await expect(async () => {
+    if (!/\/checkout$/.test(new URL(page.url()).pathname)) {
+      await page.getByRole("button", { name: "Buy Now", exact: true }).click({ timeout: 5000 });
+    }
+    await expect(page).toHaveURL(/\/checkout$/, { timeout: 5000 });
+  }).toPass({ timeout: 30000 });
   await expect(page.getByText("Size: UK 9", { exact: true })).toBeVisible();
   await expect(page.getByText("Qty: 1", { exact: true })).toBeVisible();
   await page.goto("/cart");
-  await page.getByRole("button", { name: "+", exact: true }).click();
-  await expect(page.getByText("2 items in your order", { exact: true })).toBeVisible();
+  // The cart line renders once the saved cart has loaded; only then can "+" change it.
+  await expect(page.getByText("1 items in your order", { exact: true })).toBeVisible();
+  await expect(async () => {
+    if (await page.getByText("1 items in your order", { exact: true }).isVisible()) {
+      await page.getByRole("button", { name: "+", exact: true }).click({ timeout: 5000 });
+    }
+    await expect(page.getByText("2 items in your order", { exact: true })).toBeVisible({ timeout: 5000 });
+  }).toPass({ timeout: 30000 });
 });
 
 test("home and search card adds use UK 9 and merge into one line @features", async ({ page }) => {
