@@ -44,10 +44,16 @@ test("buy now preselects UK 9 and the default shoe retains its product-id key @f
   // React hydrates and be lost (it failed in 17 of 52 preview runs of the 2026-10-26
   // capture, at different steps, on the healthy build too). Each click is retried until
   // its effect shows, as in auth.spec.ts; a click that never takes effect still fails.
+  // Buy Now is clicked again only if the last click recorded no add_to_cart event. A click
+  // that was taken but navigates slowly must not be repeated: it would add a second shoe and
+  // restart the navigation to /checkout.
   await page.goto("/product/prod-08");
   await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed")), { timeout: 30000 }).toBe(true);
   await expect(async () => {
-    if (!/\/checkout$/.test(new URL(page.url()).pathname)) {
+    if (
+      !/\/checkout$/.test(new URL(page.url()).pathname) &&
+      !(await page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "add_to_cart")))
+    ) {
       await page.getByRole("button", { name: "Buy Now", exact: true }).click({ timeout: 5000 });
     }
     await expect(page).toHaveURL(/\/checkout$/, { timeout: 5000 });
