@@ -16,6 +16,8 @@ test("synthetic user searches for products and filters category @search", async 
   // Verify catalogue loads products
   const productCards = main.locator("a[href^='/product/']");
   await expect(productCards.first()).toBeVisible();
+  // The cart provider writes aceso_cart only after its load effect ran: React has hydrated (DL-74).
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("aceso_cart")), { timeout: 30000 }).not.toBeNull();
 
   // Search for "headphones"
   const searchInput = main.locator("input[placeholder*='Filter by keyword']");
