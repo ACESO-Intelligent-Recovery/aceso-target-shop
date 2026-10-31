@@ -21,6 +21,8 @@ test("shoe page offers UK sizes and carries the selection to cart and checkout @
   await page.goto("/cart");
   await expect(page.getByText("Size: UK 8", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Proceed to Checkout" }).click();
+  // "Size: UK 8" is shown on /cart too, so the checkout page itself is checked first (DL-74).
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 45000 });
   await expect(page.getByText("Size: UK 8", { exact: true })).toBeVisible();
 });
 
@@ -35,6 +37,7 @@ test("bag page has no selector or cart and checkout size @features", async ({ pa
   await expect(page.getByTestId("cart-line")).toHaveCount(1);
   await expect(page.getByText(/^Size:/)).toHaveCount(0);
   await page.getByRole("button", { name: "Proceed to Checkout" }).click();
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 45000 });
   await expect(page.getByText("Qty: 1", { exact: true })).toBeVisible();
   await expect(page.getByText(/^Size:/)).toHaveCount(0);
 });

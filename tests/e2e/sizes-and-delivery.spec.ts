@@ -32,6 +32,8 @@ test("clothing size is keyboard usable and follows the choice into cart and chec
   await expect(page.getByText("Size: L", { exact: true })).toBeVisible();
   await expect(page.getByText("1 items in your order", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Proceed to Checkout" }).click();
+  // "Size: L" is shown on /cart too, so the checkout page itself is checked first (DL-74).
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 45000 });
   await expect(page.getByText("Size: L", { exact: true })).toBeVisible();
 });
 
@@ -62,7 +64,7 @@ test("buy now works with the default clothing size and other products have no se
   await page.goto("/product/prod-07");
   await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed"))).toBe(true);
   await page.getByRole("button", { name: "Buy Now", exact: true }).click();
-  await expect(page).toHaveURL(/\/checkout$/);
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 45000 });
   await expect(page.getByText("Size: M", { exact: true })).toBeVisible();
   await expect(page.getByText("Qty: 1", { exact: true })).toBeVisible();
 });
@@ -74,8 +76,12 @@ test("confirmation adds five calendar days after mount without changing the redi
   await page.goto("/product/prod-07");
   await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed"))).toBe(true);
   await page.getByRole("button", { name: "Buy Now", exact: true }).click();
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 45000 });
   await expect(page.getByRole("button", { name: /Place Order/ })).toBeVisible();
+  // Place Order once, after checkout_started showed the page has hydrated (DL-74).
+  await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "checkout_started")), { timeout: 30000 }).toBe(true);
   await page.getByRole("button", { name: /Place Order/ }).click();
+  await expect(page).toHaveURL(/\/order-success/, { timeout: 60000 });
   await expect(page.getByRole("heading", { name: "Order Confirmed!" })).toBeVisible();
   await expect(page.getByText("Estimated delivery", { exact: true })).toBeVisible();
   await expect(page.locator("time")).toHaveText("18 Oct 2026");
