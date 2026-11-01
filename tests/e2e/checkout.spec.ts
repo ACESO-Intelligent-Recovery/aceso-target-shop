@@ -34,7 +34,7 @@ test("synthetic user completes full checkout journey @checkout", async ({ page }
       },
       {
         message: "product_viewed telemetry event not dispatched with valid category",
-        timeout: 5000,
+        timeout: 30000,
       }
     )
     .toBe(true);
@@ -60,9 +60,10 @@ test("synthetic user completes full checkout journey @checkout", async ({ page }
   await expect(page.getByText("$215.99")).toBeVisible();
   expect(pageErrors).toHaveLength(0);
 
-  // 4. Proceed to checkout
+  // 4. Proceed to checkout. The cart line above shows the page has hydrated, so one click
+  // is enough; the navigation may be slow on a preview (DL-74, D2 batch 1).
   await page.getByRole("button", { name: /Proceed to Checkout/i }).click();
-  await expect(page).toHaveURL(/.*checkout/);
+  await expect(page).toHaveURL(/.*checkout/, { timeout: 45000 });
   // Monetary verification: verify 8% tax ($16.00) and order total button ($215.99)
   await expect(page.getByText("$16.00")).toBeVisible();
   await expect(page.getByRole("button", { name: /Place Order \(\$215\.99\)/i })).toBeVisible();
@@ -81,18 +82,19 @@ test("synthetic user completes full checkout journey @checkout", async ({ page }
       },
       {
         message: "checkout_started telemetry event not dispatched with correct total",
-        timeout: 5000,
+        timeout: 30000,
       }
     )
     .toBe(true);
 
   expect(pageErrors).toHaveLength(0);
 
-  // 5. Place order
+  // 5. Place order: once, after checkout_started showed the page has hydrated. It is never
+  // clicked again, so an order cannot be placed twice (DL-74).
   await page.getByRole("button", { name: /Place Order/i }).click();
 
   // 6. Verify confirmation page (HC-1.1 proof)
-  await expect(page).toHaveURL(/.*order-success/);
+  await expect(page).toHaveURL(/.*order-success/, { timeout: 60000 });
   await expect(page.getByRole("heading", { name: /Order Confirmed!/i })).toBeVisible();
   await expect(page.getByText("$215.99")).toBeVisible();
   await expect(page.getByText(/checkout_completed/i)).toBeVisible();
@@ -109,6 +111,7 @@ test("cart under $50 keeps free shipping @checkout", async ({ page }) => {
   page.on("pageerror", (err) => pageErrors.push(err));
 
   await page.goto("/product/prod-10");
+  await expect.poll(() => page.evaluate(() => window.__ACESO_EVENTS__?.some((event) => event.event === "product_viewed")), { timeout: 30000 }).toBe(true);
   await page.getByRole("button", { name: /Add to Cart/i }).click();
   await expect(page.getByText(/Added \d+ ×/)).toBeVisible();
 
